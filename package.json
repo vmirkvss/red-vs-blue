@@ -1,0 +1,37 @@
+{
+  "name": "red-vs-blue",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc -b && vite build",
+    "test": "vitest run tests/unit.test.ts",
+    "test:rules": "firebase emulators:exec --project demo-red-blue --only database \"vitest run tests/rules.test.ts\"",
+    "test:load": "firebase emulators:exec --project demo-red-blue --only database \"vitest run tests/load.test.ts\"",
+    "format": "prettier --write src tests *.json *.ts *.html .github/workflows/*.yml"
+  },
+  "dependencies": {
+    "firebase": "^12.19.0",
+    "qrcode.react": "^4.2.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
+    "@tailwindcss/vite": "^4.1.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.1.0",
+    "firebase-tools": "^15.34.2",
+    "prettier": "^3.9.10",
+    "tailwindcss": "^4.1.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.2.0",
+    "vitest": "^5.0.5"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.13.6"
+  }
+}
