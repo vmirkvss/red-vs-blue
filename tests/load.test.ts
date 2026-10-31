@@ -4,91 +4,109 @@ import {
   set,
   get,
   onValue,
-  runTransaction,
   onDisconnect,
   goOffline,
 } from "firebase/database";
-import { environment, seed } from "./support";
-import { results } from "../src/model";
-it("60 independent emulator clients vote and receive host transitions", async () => {
+import { environment, question } from "./support";
+import { initial, type State } from "../src/model";
+import { joinGame, castVote, transition, finalizeRound } from "../src/gameApi";
+it("60 clients register concurrently, vote twice, synchronize and share finalized scores", async () => {
   const env = await environment("demo-load");
+  const stops: (() => void)[] = [];
   try {
-    await seed(env);
+    await env.withSecurityRulesDisabled((c) =>
+      set(ref(c.database()), {
+        admins: { host: true },
+        games: { ABC234: { state: initial, questions: { q1: question } } },
+      }),
+    );
     const host = env.authenticatedContext("host").database();
     const clients = Array.from({ length: 60 }, (_, i) => ({
       uid: `p${i}`,
       db: env.authenticatedContext(`p${i}`).database(),
     }));
-    const seen = new Set<string>();
-    const stops = clients.map(({ uid, db }) =>
-      onValue(ref(db, "games/ABC234/state"), (s) => {
-        if (s.val()?.phase === "results_revealed") seen.add(uid);
-      }),
-    );
+    const seen = new Map<string, Set<string>>();
+    for (const { uid, db } of clients) {
+      seen.set(uid, new Set());
+      stops.push(
+        onValue(ref(db, "games/ABC234/state"), (snap) => {
+          seen.get(uid)!.add(snap.val()?.phase);
+        }),
+      );
+    }
     await Promise.all(
       clients.map(async ({ uid, db }) => {
-        await set(ref(db, `games/ABC234/participants/${uid}`), { name: uid });
-        const presence = ref(db, `games/ABC234/presence/${uid}/tab`);
-        await onDisconnect(presence).remove();
-        await set(presence, true);
-        const result = await runTransaction(
-          ref(db, `games/ABC234/votes/r1/${uid}`),
-          (v) =>
-            v === null
-              ? Number(uid.slice(1)) < 24
-                ? "red"
-                : "blue"
-              : undefined,
-          { applyLocally: false },
-        );
-        expect(result.committed).toBe(true);
+        await joinGame(db, "ABC234", uid, `Игрок ${uid.slice(1)}`);
+        const p = ref(db, `games/ABC234/presence/${uid}/tab`);
+        await onDisconnect(p).remove();
+        await set(p, true);
       }),
     );
-    await set(ref(host, "games/ABC234/state/phase"), "voting_closed");
-    await set(ref(host, "games/ABC234/state/phase"), "results_revealed");
-    const votes = (await get(ref(host, "games/ABC234/votes/r1"))).val();
-    expect(results(votes)).toMatchObject({
-      red: 24,
-      blue: 36,
-      total: 60,
-      redPercent: 40,
-      bluePercent: 60,
-    });
+    expect((await get(ref(host, "games/ABC234/roster/count"))).val()).toBe(60);
+    let state = (await get(ref(host, "games/ABC234/state"))).val() as State;
+    await transition(host, "ABC234", state, "phase1_open", question);
+    state = (await get(ref(host, "games/ABC234/state"))).val();
+    const round = state.roundId;
     await Promise.all(
-      clients.map(async ({ db }) =>
-        expect(
-          results((await get(ref(db, "games/ABC234/votes/r1"))).val()).total,
-        ).toBe(60),
+      clients.map(({ uid, db }, i) =>
+        castVote(db, "ABC234", round, "phase1", uid, i < 38 ? "red" : "blue"),
       ),
     );
-    await new Promise<void>((resolve, reject) => {
-      const deadline = Date.now() + 5000;
-      const timer = setInterval(() => {
-        if (seen.size === 60) {
-          clearInterval(timer);
-          resolve();
-        } else if (Date.now() > deadline) {
-          clearInterval(timer);
-          reject(new Error(`Only ${seen.size} received results`));
-        }
-      }, 20);
-    });
+    await transition(host, "ABC234", state, "phase1_closed");
+    state = { ...state, phase: "phase1_closed" };
+    await transition(host, "ABC234", state, "phase2_open");
+    state = { ...state, phase: "phase2_open" };
+    await Promise.all(
+      clients.map(({ uid, db }, i) =>
+        castVote(db, "ABC234", round, "phase2", uid, i < 45 ? "red" : "blue"),
+      ),
+    );
+    await transition(host, "ABC234", state, "phase2_closed");
+    await finalizeRound(host, "ABC234", round);
+    await Promise.all(
+      clients.map(async ({ db }, i) => {
+        const result = (
+          await get(ref(db, `games/ABC234/roundResults/${round}`))
+        ).val();
+        expect(result).toEqual({
+          phase1: { red: 38, blue: 22 },
+          phase2: { red: 45, blue: 15 },
+          winner: "red",
+          awarded: 45,
+        });
+        const scores = (
+          await get(ref(db, `games/ABC234/scores/${round}`))
+        ).val();
+        expect(Object.keys(scores)).toHaveLength(60);
+        expect(scores[`p${i}`].total).toBe(i < 45 ? 1 : 0);
+      }),
+    );
+    for (const phases of seen.values())
+      for (const phase of [
+        "waiting",
+        "phase1_open",
+        "phase1_closed",
+        "phase2_open",
+        "phase2_closed",
+        "results_revealed",
+      ])
+        expect(phases.has(phase)).toBe(true);
     goOffline(clients[0].db);
     await new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
         off();
         reject(new Error("Presence not removed"));
       }, 5000);
-      const off = onValue(ref(host, "games/ABC234/presence/p0"), (s) => {
-        if (!s.exists()) {
+      const off = onValue(ref(host, "games/ABC234/presence/p0"), (snap) => {
+        if (!snap.exists()) {
           clearTimeout(timeout);
           off();
           resolve();
         }
       });
     });
-    stops.forEach((s) => s());
   } finally {
+    stops.forEach((s) => s());
     await env.cleanup();
   }
-}, 60000);
+}, 90000);

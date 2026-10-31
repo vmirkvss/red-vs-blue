@@ -798,3 +798,235 @@ footer {
   margin-top: 16px;
   padding-bottom: 16px;
 }
+/* Two-phase voting extends the existing event theme. */
+.phase-instruction {
+  text-align: center;
+  color: #e1e7f2;
+  font-size: clamp(16px, 2vw, 23px);
+  max-width: 800px;
+  margin: 0 auto 26px;
+}
+.phase {
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+.answer-legend {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+  margin: 0 0 26px;
+  font-size: 18px;
+}
+.round-outcome {
+  animation: arrive 0.4s ease;
+}
+.winner-message {
+  padding: 18px 22px;
+  border: 1px solid #465372;
+  background: #202b4270;
+  border-radius: 12px;
+  font-size: 18px;
+}
+.winner-message span {
+  display: block;
+  margin-top: 7px;
+  font-size: 13px;
+  color: #aebdd5;
+}
+.dual-results {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+.dual-results .results {
+  width: 100%;
+  margin-top: 24px;
+}
+.personal-score {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+  border-radius: 14px;
+  background: #1a2940;
+  margin: 28px 0;
+}
+.personal-score > strong {
+  font-size: 46px;
+  color: #94d3b1;
+}
+.personal-score span {
+  display: block;
+  font-size: 13px;
+  color: #b0bed3;
+  margin-top: 7px;
+}
+.leaderboard {
+  margin-top: 30px;
+}
+.leaderboard h2 {
+  font-size: 24px;
+}
+.leaderboard table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+.leaderboard thead th {
+  color: #8595b0;
+  font-weight: 500;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 12px 10px;
+}
+.leaderboard th {
+  text-align: left;
+  font-weight: 500;
+}
+.leaderboard td,
+.leaderboard tbody th {
+  padding: 12px 10px;
+  border-top: 1px solid #26334a;
+}
+.leaderboard td:last-child,
+.leaderboard th:last-child {
+  text-align: right;
+}
+.leaderboard td:first-child {
+  color: #9eacc6;
+  width: 70px;
+}
+.leaderboard small {
+  font-size: 11px;
+  color: #aabfff;
+}
+.leaderboard .is-me {
+  background: #3b82f618;
+}
+.leaderboard .podium {
+  background: #e9b84d0d;
+  font-size: 19px;
+}
+.leaderboard .podium-1 {
+  color: #efcd72;
+}
+.leaderboard .podium-2 {
+  color: #cfdaee;
+}
+.leaderboard .podium-3 {
+  color: #d5a37c;
+}
+.final-board {
+  max-width: 1000px;
+  margin: auto;
+  padding: 20px 0 50px;
+}
+.final-board h1 {
+  text-align: center;
+  font-size: 44px;
+}
+.final-board > a {
+  display: block;
+  margin-top: 28px;
+  color: #9cacc5;
+}
+.four-stats {
+  grid-template-columns: repeat(4, 1fr);
+}
+.dashboard-tabs {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 20px;
+}
+.dashboard-tabs [aria-pressed="true"] {
+  border-color: #7795c9;
+  background: #263754;
+}
+.admin-results {
+  margin-top: 24px;
+}
+.projector-outcome {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 40px;
+}
+.projector-outcome .dual-results {
+  grid-template-columns: 1fr;
+  gap: 4px;
+}
+.projector-outcome .leaderboard {
+  margin-top: 0;
+}
+.projector-outcome .leaderboard td,
+.projector-outcome .leaderboard tbody th {
+  padding: 7px 10px;
+}
+.projector-outcome .leaderboard h2 {
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+.projector .revealed-round h1 {
+  font-size: clamp(28px, 3vw, 48px);
+}
+.projector .answer-legend {
+  margin-bottom: 16px;
+  font-size: 16px;
+}
+.projector .winner-message {
+  font-size: 16px;
+  padding: 14px 18px;
+}
+.projector .phase-instruction {
+  margin-bottom: 18px;
+}
+@media (max-width: 800px) {
+  .four-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .projector-outcome {
+    grid-template-columns: 1fr;
+  }
+  .dual-results {
+    gap: 18px;
+  }
+  .answer-legend {
+    font-size: 14px;
+    gap: 16px;
+  }
+}
+@media (max-width: 480px) {
+  .dual-results {
+    grid-template-columns: 1fr;
+  }
+  .personal-score {
+    padding: 18px;
+  }
+  .leaderboard td,
+  .leaderboard tbody th {
+    padding: 12px 7px;
+  }
+  .phase-instruction {
+    font-size: 17px;
+  }
+  .winner-message {
+    font-size: 16px;
+  }
+  .answer-legend {
+    justify-content: flex-start;
+  }
+  .final-board h1 {
+    font-size: 34px;
+  }
+}
+.projector-outcome .leaderboard td,
+.projector-outcome .leaderboard tbody th {
+  padding: 5px 10px;
+  font-size: 14px;
+}
+.projector-outcome .leaderboard .small {
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.4;
+}

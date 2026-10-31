@@ -6,13 +6,7 @@ import {
   setPersistence,
   signInAnonymously,
 } from "firebase/auth";
-import {
-  getDatabase,
-  connectDatabaseEmulator,
-  ref,
-  runTransaction,
-} from "firebase/database";
-import type { Choice } from "./model";
+import { getDatabase, connectDatabaseEmulator, ref } from "firebase/database";
 const e = import.meta.env;
 export let configured = !!(
   e.VITE_FIREBASE_API_KEY &&
@@ -55,23 +49,12 @@ export function identity() {
     throw error;
   }));
 }
-export async function castVote(
-  game: string,
-  round: string,
-  uid: string,
-  choice: Choice,
-) {
-  const result = await runTransaction(
-    ref(db, `games/${game}/votes/${round}/${uid}`),
-    (value) => (value === null ? choice : undefined),
-    { applyLocally: false },
-  );
-  if (!result.committed) throw new Error("duplicate");
-}
 export function friendly(error: unknown) {
   const code = String((error as { code?: string })?.code || error);
   if (/permission|PERMISSION/i.test(code))
     return "Действие недоступно. Возможно, голосование уже закрыто или у вас нет прав.";
+  if (/stale/.test(code))
+    return "Состояние игры изменилось. Обновляем данные — повторите действие.";
   if (/duplicate/.test(code)) return "Ваш голос уже сохранён.";
   if (/auth\//.test(code))
     return "Не удалось войти. Проверьте данные, подключение и настройки авторизации.";
