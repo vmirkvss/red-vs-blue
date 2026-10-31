@@ -2,13 +2,15 @@ name: Проверка и публикация
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
   pages: write
   id-token: write
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   build:
@@ -26,6 +28,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run test:rules
+      - run: npm run test:load
       - run: npm run build
         env:
           VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
@@ -38,6 +41,7 @@ jobs:
         with:
           path: dist
   deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:

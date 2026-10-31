@@ -9,7 +9,8 @@
     "test": "vitest run tests/unit.test.ts",
     "test:rules": "firebase emulators:exec --project demo-red-blue --only database \"vitest run tests/rules.test.ts\"",
     "test:load": "firebase emulators:exec --project demo-red-blue --only database \"vitest run tests/load.test.ts\"",
-    "format": "prettier --write src tests *.json *.ts *.html .github/workflows/*.yml"
+    "format": "prettier --write src tests *.json *.ts *.html .github/workflows/*.yml",
+    "rules:generate": "python3 scripts/generate_rules.py"
   },
   "dependencies": {
     "firebase": "^12.19.0",
